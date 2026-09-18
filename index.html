@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head></head>
+
+    <body>
+        <p id="FPS Counter">Placeholder</p>
+        <h1>Impossible Pong Game!</h1>
+        <h2>Shoot for a score of 35! Click to Start or Reset! Move Mouse to Move Paddle!</h2>
+        <p id="Score">Score: XXX</p>
+
+        <canvas id="myCanvas" width="800" height="500" style="border: 5px solid #000;">
+            Your browser does not support the canvas element.
+        </canvas>
+        <script type="text/javascript" src="/classes_n_such.js"></script>
+        <script type="text/javascript">
+
+            var frame = 0;
+            var desiredFPS = 60;
+            var MS_PER_FRAME = 1000/desiredFPS;
+
+            function updateFrameRate(newFrameRate) {
+                desiredFPS = newFrameRate;
+                MS_PER_FRAME = 1000 / desiredFPS
+                document.getElementById("Frame Counter").innerHTML = desiredFPS;
+            }
+
+            window.onload = function() {
+
+                // frame stuff
+
+                var fps = 0; // display to player
+                var frameThisSecond = 0; // conut this second
+                var lastFrameMs = 0; // time since last frame or whatever
+                var delta = 0;
+
+                var previous = 0; // get the current time and it'll be 0 DUHHH
+                var lag = 0; // also set a lag
+
+
+                // set frameThisSecond to fps, then reset frameThisSecond
+                setInterval(function() {fps=frameThisSecond; frameThisSecond = 0;}, 1000);
+
+                // input stuff
+
+                // won't be needing this
+                // var keysdown = {};
+
+                // window.addEventListener("keydown", function(event) {
+                //     if (event.defaultPrevented) {
+                //         return;
+                //     }
+                //     keysdown[event.key] = true;
+                //     event.preventDefault();
+                // }, true);
+
+                // window.addEventListener("keyup", function(event) {
+                //     if (event.defaultPrevented) {
+                //         return;
+                //     }
+                //     keysdown[event.key] = false;
+                //     event.preventDefault();
+                // }, true);
+
+                // this block of code gets mouse position
+                var mouse_y = 0;
+                window.addEventListener("mousemove", function(event) {
+                    const relativeY = event.clientY - canvas.offsetTop;
+                    if (relativeY > 0 && relativeY < canvas.height) {
+                        mouse_y = relativeY
+                    }
+                }, true);
+
+                // thank you mozilla aka firefox
+                // https://developer.mozilla.org/en-US/docs/Games/Tutorials/2D_Breakout_game_pure_JavaScript/Mouse_controls
+                
+
+                // display stuff
+
+                var canvas = document.getElementById("myCanvas");
+                var context = canvas.getContext("2d");
+
+                // variable stuff
+
+                // also won't be needing this BUT won't hurt to keep it in code
+                // var ball = {
+                //     x: canvas.width/2,
+                //     y: canvas.height/2,
+                //     radius: 10,
+                //     fillcolor: "green",
+                //     strokecolor: "blue",
+                //     velocity_x: 1,
+                //     velocity_y: 1
+                // }
+
+                // var player = {
+                //     x: 100,
+                //     y: canvas.height / 2,
+                //     height: 100,
+                //     width: 25,
+                //     fill_color: "white",
+                //     stroke_color: "black",
+                //     velocity_x: 0,
+                //     velocity_y: 0
+                // };
+
+                // actually need this lol!
+                var playerPaddle = new PlayerPaddle(context, 100, canvas.height/2, 50, 200, 0.5);
+
+                // ball stuff
+                var ball = new Ball(context, canvas.width/4, canvas.height/2, 0.5, playerPaddle);
+                // debug
+
+                var oppPaddle = new OtherPaddle(context, 700, canvas.height/2, 50, 100, ball);
+
+
+                // player score
+                var score = 0;
+                var game_started = false;
+
+                // this will handle starting the game and resetting the game.
+                window.addEventListener("click", function(event) {
+                    if (!game_started) {
+                        // game is over
+                        score = 0;
+                        ball.start_ball(canvas.width/4, canvas.height/2);
+                        game_started = true;
+                        document.getElementById("Score").textContent = "GAME START!";
+                        game_timer = setInterval(function() {
+                            if (game_started) {
+                                score += 1;
+                                document.getElementById("Score").textContent = "Score: " + score;
+                            }
+                        }, 1000);
+                    } else {
+                        // game is still going on
+                        score = 0;
+                        ball.start_ball(canvas.width/4, canvas.height/2);
+                        game_started = true;
+                        document.getElementById("Score").textContent = "GAME START!";
+                        clearInterval(game_timer);
+                        game_timer = setInterval(function() {
+                            if (game_started) {
+                                score += 1;
+                                document.getElementById("Score").textContent = "Score: " + score;
+                            }
+                        }, 1000);
+                    }
+                });
+
+
+                // game loop
+                requestAnimationFrame(mainLoop);
+
+                function mainLoop(timestamp) {
+
+                    var currentTime = timestamp;
+                    delta = currentTime - previous;
+                    previous = currentTime;
+                    lag += delta;
+
+                    processInput();
+                    while (lag >= MS_PER_FRAME) {
+                        update(MS_PER_FRAME);
+                        lag -= MS_PER_FRAME
+                    }
+                    draw(lag/MS_PER_FRAME);
+
+                    requestAnimationFrame(mainLoop);
+
+                }
+
+                // functions
+
+                function processInput() {
+
+                    playerPaddle.processInput(mouse_y);
+                    // technically don't need this
+                    // not sure if i should put 
+
+                    // if (keysdown.ArrowLeft) {
+                    //     player.velocity_x = -0.5;
+                    // } else if (keysdown.ArrowRight) {
+                    //     player.velocity_x = 0.5;
+                    // } else {
+                    //     player.velocity_x = 0;
+                    // }
+                    // if (keysdown.ArrowUp) {
+                    //     player.velocity_y = -0.5;
+                    // } else if (keysdown.ArrowDown) {
+                    //     player.velocity_y = 0.5;
+                    // } else {
+                    //     player.velocity_y = 0;
+                    // }
+                }
+                function update(delta) {
+                    // player.y = player.y + player.velocity_y * (delta);
+
+                    // ball.x = ball.x + ball.velocity_x * delta;
+                    // ball.y = ball.y + ball.velocity_y * delta;
+                    
+                    // if (ball.x > canvas.width) {
+                    //     ball.velocity_x = -ball.velocity_x;
+                    //     ball.x = canvas.width;
+                    // }
+                    
+                    // if (ball.x < 0) {
+                    //     ball.velocity_x = -ball.velocity_x;
+                    //     ball.x = 0;
+                    // }
+                    
+                    // if (ball.y > canvas.height) {
+                    //     ball.velocity_y = -ball.velocity_y;
+                    //     ball.y = canvas.height;
+                    // }
+                    
+                    // if (ball.y < 0) {
+                    //     ball.velocity_y = - ball.velocity_y;
+                    //     ball.y = 0;
+                    // }
+
+                    playerPaddle.update(delta);
+                    ball.update(delta, score);
+                    oppPaddle.update();
+
+                    if (ball.x < 0) {
+                        clearInterval(game_timer);
+                    }
+
+                }
+                function draw(delta) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    // context.save();
+                    // context.translate(player.x, player.y);
+                    // context.beginPath();
+                    // context.rect(0, 0, player.width, player.height);
+                    // context.fillStyle = player.fillColor;
+                    // context.fill();
+                    // context.lineWidth = 1;
+                    // context.strokeStyle = player.strokeColor;
+                    // context.stroke();
+                    // context.restore();
+                    document.getElementById("FPS Counter").textContent = "FPS: " + fps;
+                    ++frameThisSecond;
+
+
+                    // context.beginPath();
+                    // context.save();
+                    // context.translate(ball.x, ball.y);
+                    // context.arc(0, 0, ball.radius, 0, 2 * Math.PI, false);
+                    // context.fillStyle = ball.fillColor;
+                    // context.fill();
+                    // context.lineWidth = 1;
+                    // context.strokeStyle = ball.strokeColor;
+                    // context.stroke();
+                    // context.restore();
+                    playerPaddle.draw();
+                    ball.draw();
+                    oppPaddle.draw();
+                }
+
+            }
+        </script>
+        <p>Control Frame Rate</p>
+        <input type="range" min="1" max="60" value="60" onchange="updateFrameRate(this.value)"/>
+        <span id="Frame Counter">60</span>
+
+    </body>
+
+</html>
+
