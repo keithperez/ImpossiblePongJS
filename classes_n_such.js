@@ -42,6 +42,7 @@ function PlayerPaddle(context, x, y, width, inital_height, speed) {
     // drawing stuff
     this.fill_color = "green";
     this.stroke_color = "black";
+    this.mouse_mode = false;
 }
 
 // just in case i need to get the values of like the rect ig
@@ -55,16 +56,29 @@ PlayerPaddle.prototype.get_y_bounds = function() {
 }
 
 // take in mouse_y value and convert it to y_velocity onto the player paddle
-PlayerPaddle.prototype.processInput = function(mouse_y) {
+PlayerPaddle.prototype.processInput = function(mouse_y, keys_down) {
     
     var paddle_y_bounds = this.get_y_bounds();
     this.y_velocity = 0;
     // if mouse_y is higher than paddle
-    if (paddle_y_bounds[0] > mouse_y) {
-        this.y_velocity = 0-this.paddle_speed;
+    if (this.mouse_mode) {
+        if (paddle_y_bounds[0] > mouse_y) {
+            this.y_velocity = 0-this.paddle_speed;
+            this.mouse_mode = true
+        }
+        if (paddle_y_bounds[1] < mouse_y) {
+            this.y_velocity = this.paddle_speed;
+            this.mouse_mode = true
+        }
     }
-    if (paddle_y_bounds[1] < mouse_y) {
+
+    if (keys_down.ArrowUp) {
+        this.y_velocity = -this.paddle_speed;
+        this.mouse_mode = false
+    }
+    if (keys_down.ArrowDown) {
         this.y_velocity = this.paddle_speed;
+        this.mouse_mode = false
     }
     
 }
@@ -118,6 +132,7 @@ Ball.prototype.start_ball = function(x_start, y_start) {
 
     this.afterimages = 0;
     this.previous_positions = [];
+    this.player_paddle.mouse_mode = true;
 
 }
 
@@ -155,10 +170,10 @@ Ball.prototype.update = function(delta, score) {
     this.y += this.y_velocity * delta;
 
     if (this.y - this.radius < 0) {
-        this.y_velocity = -this.y_velocity;
+        this.y_velocity = Math.abs(this.y_velocity);
     }
     if (this.y + this.radius > 500) {
-        this.y_velocity = -this.y_velocity;
+        this.y_velocity = -Math.abs(this.y_velocity);
     }
 
     // set whatever for bouncing off opp paddle

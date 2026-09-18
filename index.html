@@ -11,7 +11,7 @@
         <canvas id="myCanvas" width="800" height="500" style="border: 5px solid #000;">
             Your browser does not support the canvas element.
         </canvas>
-        <script type="text/javascript" src="/classes_n_such.js"></script>
+        <script type="text/javascript" src="classes_n_such.js"></script>
         <script type="text/javascript">
 
             var frame = 0;
@@ -42,24 +42,24 @@
 
                 // input stuff
 
-                // won't be needing this
-                // var keysdown = {};
+                // will be needing this
+                var keysdown = {};
 
-                // window.addEventListener("keydown", function(event) {
-                //     if (event.defaultPrevented) {
-                //         return;
-                //     }
-                //     keysdown[event.key] = true;
-                //     event.preventDefault();
-                // }, true);
+                window.addEventListener("keydown", function(event) {
+                    if (event.defaultPrevented) {
+                        return;
+                    }
+                    keysdown[event.key] = true;
+                    event.preventDefault();
+                }, true);
 
-                // window.addEventListener("keyup", function(event) {
-                //     if (event.defaultPrevented) {
-                //         return;
-                //     }
-                //     keysdown[event.key] = false;
-                //     event.preventDefault();
-                // }, true);
+                window.addEventListener("keyup", function(event) {
+                    if (event.defaultPrevented) {
+                        return;
+                    }
+                    keysdown[event.key] = false;
+                    event.preventDefault();
+                }, true);
 
                 // this block of code gets mouse position
                 var mouse_y = 0;
@@ -173,7 +173,7 @@
 
                 function processInput() {
 
-                    playerPaddle.processInput(mouse_y);
+                    playerPaddle.processInput(mouse_y, keysdown);
                     // technically don't need this
                     // not sure if i should put 
 
